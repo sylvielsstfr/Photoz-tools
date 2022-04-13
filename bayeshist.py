@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from mpi4py import MPI
+#from mpi4py import MPI
 import numpy as np
 import sys
 import time
@@ -16,9 +16,11 @@ if len(sys.argv) > 3:
     fname_ini = sys.argv[3]
 burnin_fraction = 0.3
 
-comm = MPI.COMM_WORLD
-MPI_size = comm.Get_size()
-MPI_rank = comm.Get_rank()
+#comm = MPI.COMM_WORLD
+#MPI_size = comm.Get_size()
+#MPI_rank = comm.Get_rank()
+MPI_size = 1
+MPI_rank = 0
 
 if MPI_rank == 0:
     print('Input parameters:', sys.argv)
@@ -49,9 +51,9 @@ if MPI_rank == 0:
 else:
     hbs = None
 
-comm.Barrier()
+#comm.Barrier()
 
-hbs = comm.bcast(hbs, root=0)
+#hbs = comm.bcast(hbs, root=0)
 if MPI_rank == 0:
     print('Broadcasted hbs')
 
@@ -59,7 +61,7 @@ if MPI_rank == 0:
     fbs = np.zeros( (nsamples, nbins) )
     tstart = time.time()
 
-comm.Barrier()
+#comm.Barrier()
 ibins = np.repeat(np.arange(1, nbins), nobj).reshape((nbins-1, nobj)).T.ravel()
 for kk in range(1, nsamples):
 
@@ -76,7 +78,9 @@ for kk in range(1, nsamples):
     nbs = np.bincount(res[ind_inrange], minlength=nbins)
 
     nbs_all = np.zeros_like(nbs)
-    comm.Allreduce(nbs, nbs_all, op=MPI.SUM)
+    #comm.Allreduce(nbs, nbs_all, op=MPI.SUM)
+    nbs_all=np.copy(nbs)
+    
 
     if MPI_rank == 0:
 
@@ -91,7 +95,7 @@ for kk in range(1, nsamples):
 
         hbs = dirichlet(1, nbs_all) #### PLUS ONE HERE OR NOT?? ???? ??? 
 
-    hbs = comm.bcast(hbs, root=0)
+    #hbs = comm.bcast(hbs, root=0)
 
     if MPI_rank == 0:
         fbs[kk,:] = hbs
